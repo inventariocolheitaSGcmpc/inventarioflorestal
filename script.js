@@ -619,8 +619,10 @@ function wrapBase64(value) {
 async function buildExportMap(selectedFeatures) {
   const exportMapContainer = document.getElementById("exportMap");
   exportMapContainer.innerHTML = "";
+  const canvasRenderer = L.canvas({ padding: 0.5 });
 
   const exportMap = L.map(exportMapContainer, {
+    preferCanvas: true,
     zoomControl: false,
     attributionControl: true
   });
@@ -644,9 +646,10 @@ async function buildExportMap(selectedFeatures) {
     },
     {
       style: (feature) => ({
+        renderer: canvasRenderer,
         color: "#ffff00",
         weight: 4,
-        fillOpacity: 0.32,
+        fillOpacity: 0.42,
         fillColor: getColor(feature.properties.produtividade, minValue, maxValue)
       })
     }
@@ -671,6 +674,7 @@ async function buildExportMap(selectedFeatures) {
 
   if (points.length > 1) {
     L.polyline(points.map(([lng, lat]) => [lat, lng]), {
+      renderer: canvasRenderer,
       color: "#ffff00",
       weight: 5,
       dashArray: "8, 12",
@@ -683,6 +687,7 @@ async function buildExportMap(selectedFeatures) {
   addExportLegend(exportMap, minValue, maxValue);
 
   await waitForLeafletTiles(exportMap, [satelliteLayer]);
+  await wait(500);
 
   return exportMap;
 }
