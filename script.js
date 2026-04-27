@@ -16,13 +16,15 @@ const openGmailBtn = document.getElementById("openGmailBtn");
 const openMailAppBtn = document.getElementById("openMailAppBtn");
 const copyEmailTextBtn = document.getElementById("copyEmailTextBtn");
 const emailBodyPreview = document.getElementById("emailBodyPreview");
+const downloadEmlBtn = document.getElementById("downloadEmlBtn");
 
 const state = {
   allFeatures: [],
   currentFeatures: [],
   featureLayers: new Map(),
   selectedIds: [],
-  pendingEmailDraft: null
+  pendingEmailDraft: null,
+  pendingAttachments: null
 };
 
 const map = L.map("map", {
@@ -116,11 +118,20 @@ emailBtn.addEventListener("click", async () => {
     return;
   }
 
-  downloadXlsx(rows, currentFarmName());
+  const excelAttachment = createXlsxAttachment(rows, currentFarmName());
+  downloadBlob(excelAttachment.blob, excelAttachment.filename);
   await wait(250);
-  const screenshotName = await downloadMapScreenshot(currentFarmName());
+  const screenshotAttachment = await createMapScreenshotAttachment(currentFarmName());
+  if (screenshotAttachment?.blob) {
+    downloadBlob(screenshotAttachment.blob, screenshotAttachment.filename);
+  }
   await wait(250);
 
+  const screenshotName = screenshotAttachment?.filename || `HF_${safeFarmName(currentFarmName())}_Mapa_Sequencia_Colheita.png`;
+  state.pendingAttachments = {
+    excel: excelAttachment,
+    screenshot: screenshotAttachment
+  };
   state.pendingEmailDraft = buildEmailDraft(rows, currentFarmName(), screenshotName);
   openEmailModal(state.pendingEmailDraft);
 });
@@ -146,6 +157,19 @@ openMailAppBtn.addEventListener("click", () => {
   if (!state.pendingEmailDraft) return;
   const draft = state.pendingEmailDraft;
   window.location.href = `mailto:${draft.toSemicolon}?subject=${encodeURIComponent(draft.subject)}&body=${encodeURIComponent(draft.body)}`;
+});
+
+downloadEmlBtn.addEventListener("click", async () => {
+  if (!state.pendingEmailDraft || !state.pendingAttachments?.excel) {
+    return;
+  }
+  try {
+    const emlBlob = await buildEmlBlob(state.pendingEmailDraft, state.pendingAttachments);
+    const safeFarm = safeFarmName(currentFarmName());
+    downloadBlob(emlBlob, `HF_${safeFarm}_Rascunho_Email.eml`);
+  } catch (error) {
+    console.warn("Nao foi possivel gerar o arquivo .eml.", error);
+  }
 });
 
 copyEmailTextBtn.addEventListener("click", async () => {
@@ -397,7 +421,7 @@ function currentFarmName() {
   return farmFilter.value || "Geral";
 }
 
-function downloadXlsx(rows, farmName) {
+function createXlsxAttachment(rows, farmName) {
   const worksheetRows = rows.map((row) => ({
     "Ordem sequencia": row.ordem,
     "Fazenda/Talhao": row.fazendaTalhao,
@@ -406,14 +430,20 @@ function downloadXlsx(rows, farmName) {
     "VMI (m3)": row.vmi
   }));
 
+  const safeFarm = safeFarmName(farmName);
+  const filename = `HF_${safeFarm}_Sequencia_Talhonar.xlsx`;
   const workbook = XLSX.utils.book_new();
   const worksheet = XLSX.utils.json_to_sheet(worksheetRows);
   XLSX.utils.book_append_sheet(workbook, worksheet, "Sequencia");
-  const safeFarm = safeFarmName(farmName);
-  XLSX.writeFile(workbook, `HF_${safeFarm}_Sequencia_Talhonar.xlsx`);
+  const buffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+  const blob = new Blob(
+    [buffer],
+    { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }
+  );
+  return { filename, blob };
 }
 
-async function downloadMapScreenshot(farmName) {
+async function createMapScreenshotAttachment(farmName) {
   const safeFarm = safeFarmName(farmName);
   const filename = `HF_${safeFarm}_Mapa_Sequencia_Colheita.png`;
 
@@ -421,30 +451,27 @@ async function downloadMapScreenshot(farmName) {
     const canvas = await html2canvas(document.getElementById("map"), {
       useCORS: true,
       backgroundColor: null,
-      scale: window.devicePixelRatio > 1 ? 2 : 1
+      scale: window.devicePixelRatio > 1 ? 2 : 1,
+      onclone: (clonedDoc) => normalizeLeafletClone(clonedDoc)
     });
-    await new Promise((resolve) => {
+    const blob = await new Promise((resolve) => {
       canvas.toBlob((blob) => {
         if (!blob) {
-          resolve();
+          resolve(null);
           return;
         }
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = filename;
-        link.click();
-        setTimeout(() => {
-          URL.revokeObjectURL(url);
-          resolve();
-        }, 1000);
+        resolve(blob);
       }, "image/png");
     });
+    if (!blob) {
+      return { filename, blob: null };
+    }
+    return { filename, blob };
   } catch (error) {
     console.warn("Nao foi possivel gerar a imagem do mapa.", error);
   }
 
-  return filename;
+  return { filename, blob: null };
 }
 
 function safeFarmName(farmName) {
@@ -453,6 +480,18 @@ function safeFarmName(farmName) {
 
 function wait(ms) {
   return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
+
+function downloadBlob(blob, filename) {
+  if (!blob) {
+    return;
+  }
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.click();
+  window.setTimeout(() => URL.revokeObjectURL(url), 1500);
 }
 
 function buildEmailDraft(rows, farmName, screenshotName) {
@@ -506,6 +545,102 @@ function openEmailModal(draft) {
 function closeEmailModal() {
   emailModal.classList.add("hidden");
   emailModal.setAttribute("aria-hidden", "true");
+}
+
+function normalizeLeafletClone(clonedDoc) {
+  const selectors = [
+    ".leaflet-map-pane",
+    ".leaflet-tile-pane",
+    ".leaflet-overlay-pane",
+    ".leaflet-shadow-pane",
+    ".leaflet-marker-pane",
+    ".leaflet-tooltip-pane",
+    ".leaflet-popup-pane",
+    ".leaflet-zoom-animated",
+    ".leaflet-zoom-hide"
+  ];
+
+  clonedDoc.querySelectorAll(selectors.join(",")).forEach((node) => {
+    const style = clonedDoc.defaultView.getComputedStyle(node);
+    const parsed = parseTransform(style.transform);
+    if (!parsed) {
+      return;
+    }
+    node.style.transform = "none";
+    node.style.left = `${parsed.x}px`;
+    node.style.top = `${parsed.y}px`;
+  });
+}
+
+function parseTransform(transformValue) {
+  if (!transformValue || transformValue === "none") {
+    return null;
+  }
+
+  const matrixMatch = transformValue.match(/^matrix\((.+)\)$/);
+  if (matrixMatch) {
+    const values = matrixMatch[1].split(",").map((value) => Number(value.trim()));
+    return { x: values[4] || 0, y: values[5] || 0 };
+  }
+
+  const matrix3dMatch = transformValue.match(/^matrix3d\((.+)\)$/);
+  if (matrix3dMatch) {
+    const values = matrix3dMatch[1].split(",").map((value) => Number(value.trim()));
+    return { x: values[12] || 0, y: values[13] || 0 };
+  }
+
+  return null;
+}
+
+async function buildEmlBlob(draft, attachments) {
+  const boundary = `----=_InventarioFlorestal_${Date.now()}`;
+  const chunks = [];
+
+  chunks.push(`To: ${draft.toComma}`);
+  chunks.push(`Subject: ${draft.subject}`);
+  chunks.push("MIME-Version: 1.0");
+  chunks.push(`Content-Type: multipart/mixed; boundary="${boundary}"`);
+  chunks.push("");
+  chunks.push(`--${boundary}`);
+  chunks.push('Content-Type: text/plain; charset="UTF-8"');
+  chunks.push("Content-Transfer-Encoding: 8bit");
+  chunks.push("");
+  chunks.push(draft.body);
+  chunks.push("");
+
+  const allAttachments = [attachments.excel, attachments.screenshot].filter((item) => item?.blob);
+  for (const attachment of allAttachments) {
+    const base64 = await blobToBase64(attachment.blob);
+    chunks.push(`--${boundary}`);
+    chunks.push(`Content-Type: ${attachment.blob.type || "application/octet-stream"}; name="${attachment.filename}"`);
+    chunks.push("Content-Transfer-Encoding: base64");
+    chunks.push(`Content-Disposition: attachment; filename="${attachment.filename}"`);
+    chunks.push("");
+    chunks.push(wrapBase64(base64));
+    chunks.push("");
+  }
+
+  chunks.push(`--${boundary}--`);
+  chunks.push("");
+
+  return new Blob([chunks.join("\r\n")], { type: "message/rfc822" });
+}
+
+function blobToBase64(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const result = String(reader.result || "");
+      const base64 = result.split(",")[1] || "";
+      resolve(base64);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
+function wrapBase64(value) {
+  return value.replace(/(.{76})/g, "$1\r\n");
 }
 
 function getColor(value, min, max) {
