@@ -1,0 +1,7 @@
+.Rhistory
+.RData
+.Rproj.user/
+.Renviron
+rsconnect/
+*.log
+*.tmp

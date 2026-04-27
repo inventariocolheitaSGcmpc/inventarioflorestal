@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Inventario Florestal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+      crossorigin=""
+    >
+    <link rel="stylesheet" href="style.css">
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="hero">
+        <div>
+          <p class="eyebrow">Planejamento de Colheita</p>
+          <h1>Inventario Florestal</h1>
+          <p class="hero-copy">
+            Visualize fazendas e talhoes prontos para colheita, monte uma sequencia logistica
+            e exporte os dados para compartilhamento.
+          </p>
+        </div>
+        <img class="hero-logo" src="www/logo_cmpc.png" alt="Logo CMPC">
+      </header>
+
+      <main class="layout">
+        <aside class="sidebar">
+          <section class="panel controls">
+            <label class="field">
+              <span>Selecionar fazenda</span>
+              <select id="farmFilter"></select>
+            </label>
+            <div class="button-group">
+              <button id="clearSelectionBtn" class="btn btn-muted">Limpar selecao</button>
+              <button id="exportBtn" class="btn btn-primary">Baixar sequencia</button>
+            </div>
+            <button id="emailBtn" class="btn btn-secondary">Preparar e-mail</button>
+            <p class="helper-text">
+              No GitHub Pages o envio automatico com anexo nao roda no servidor. Este botao baixa o arquivo e abre um rascunho de e-mail.
+            </p>
+          </section>
+
+          <section class="panel stats" id="selectionSummary">
+            <p class="empty-state">Nenhum talhao selecionado.</p>
+          </section>
+
+          <section class="panel table-panel">
+            <div class="panel-header">
+              <h2>Sequencia talhonar</h2>
+              <span id="sequenceCount" class="badge">0 itens</span>
+            </div>
+            <div class="table-wrap">
+              <table id="sequenceTable">
+                <thead>
+                  <tr>
+                    <th>Ordem</th>
+                    <th>Fazenda/Talhao</th>
+                    <th>Area (ha)</th>
+                    <th>VCSC (m3)</th>
+                    <th>VMI (m3)</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </section>
+        </aside>
+
+        <section class="map-column">
+          <section class="panel overview">
+            <div class="overview-card">
+              <span>Total de fazendas</span>
+              <strong id="farmCount">-</strong>
+            </div>
+            <div class="overview-card">
+              <span>Total de talhoes</span>
+              <strong id="plotCount">-</strong>
+            </div>
+            <div class="overview-card">
+              <span>Ultima geracao</span>
+              <strong id="generatedAt">-</strong>
+            </div>
+          </section>
+          <section class="panel map-panel">
+            <div id="map"></div>
+          </section>
+        </section>
+      </main>
+    </div>
+
+    <script
+      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+      crossorigin=""
+    ></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="script.js"></script>
+  </body>
+  </html>

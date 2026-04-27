@@ -1,0 +1,3 @@
+SHINY_EMAIL_FROM=inventario.florestal.cmpc@gmail.com
+SHINY_EMAIL_PASSWORD=coloque_aqui_a_senha_de_app_do_gmail
+SHINY_EMAIL_TO=pietro.duran@cmpc.com,matheus.roberto@cmpc.com

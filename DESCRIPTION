@@ -1,0 +1,20 @@
+Package: siteinventarioflorestal
+Type: Shiny
+Title: Site Inventario Florestal
+Version: 1.0.0
+Authors@R: person("Pietro", "Duran", role = c("aut", "cre"))
+Description: Aplicacao Shiny para visualizacao de talhoes, indicadores de volume e envio de sequencias por e-mail.
+Encoding: UTF-8
+Imports:
+    shiny,
+    leaflet,
+    sf,
+    dplyr,
+    readxl,
+    janitor,
+    base64enc,
+    DT,
+    writexl,
+    blastula,
+    webshot2,
+    htmlwidgets

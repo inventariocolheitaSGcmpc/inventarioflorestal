@@ -1,0 +1,651 @@
+{
+  "generated_at": "2026-04-27 19:33:16",
+  "total_talhoes": 1650,
+  "total_fazendas": 161,
+  "projects": [
+    {
+      "projeto": "ALCINA",
+      "talhoes": 5
+    },
+    {
+      "projeto": "ALOJAMENTO",
+      "talhoes": 3
+    },
+    {
+      "projeto": "ALTO ALEGRE II",
+      "talhoes": 1
+    },
+    {
+      "projeto": "ALTO ALEGRE III",
+      "talhoes": 2
+    },
+    {
+      "projeto": "AMOREIRA",
+      "talhoes": 8
+    },
+    {
+      "projeto": "AREIAS BRANCAS",
+      "talhoes": 9
+    },
+    {
+      "projeto": "ARROIO DA LAGE",
+      "talhoes": 5
+    },
+    {
+      "projeto": "AZEVEDO SODRE",
+      "talhoes": 26
+    },
+    {
+      "projeto": "BARRONDAO",
+      "talhoes": 38
+    },
+    {
+      "projeto": "BATOVI",
+      "talhoes": 15
+    },
+    {
+      "projeto": "BAZANA",
+      "talhoes": 2
+    },
+    {
+      "projeto": "BEM-TE-VI",
+      "talhoes": 1
+    },
+    {
+      "projeto": "BOA AGUADA",
+      "talhoes": 5
+    },
+    {
+      "projeto": "BOA ESPERANÇA",
+      "talhoes": 19
+    },
+    {
+      "projeto": "BOA VISTA II",
+      "talhoes": 9
+    },
+    {
+      "projeto": "BOSSOROCA",
+      "talhoes": 17
+    },
+    {
+      "projeto": "BUTIA II",
+      "talhoes": 6
+    },
+    {
+      "projeto": "CABANHA DO PRATA",
+      "talhoes": 12
+    },
+    {
+      "projeto": "CAIARY",
+      "talhoes": 19
+    },
+    {
+      "projeto": "CALIFORNIA",
+      "talhoes": 4
+    },
+    {
+      "projeto": "CAMBAI",
+      "talhoes": 18
+    },
+    {
+      "projeto": "CANTAGALO",
+      "talhoes": 2
+    },
+    {
+      "projeto": "CARAJA",
+      "talhoes": 3
+    },
+    {
+      "projeto": "CAROLA",
+      "talhoes": 1
+    },
+    {
+      "projeto": "CASA BRANCA",
+      "talhoes": 11
+    },
+    {
+      "projeto": "CATURRITA",
+      "talhoes": 6
+    },
+    {
+      "projeto": "CERRITO",
+      "talhoes": 16
+    },
+    {
+      "projeto": "CERRO DA CRUZ",
+      "talhoes": 22
+    },
+    {
+      "projeto": "CERRO DA LAGOA",
+      "talhoes": 2
+    },
+    {
+      "projeto": "CERRO DO BATOVI",
+      "talhoes": 16
+    },
+    {
+      "projeto": "CERRO DO OURO",
+      "talhoes": 9
+    },
+    {
+      "projeto": "CERRO II",
+      "talhoes": 8
+    },
+    {
+      "projeto": "COXILHA DA ARVORE",
+      "talhoes": 1
+    },
+    {
+      "projeto": "COXILHA DO LOBATO",
+      "talhoes": 6
+    },
+    {
+      "projeto": "COXILHA VERDE",
+      "talhoes": 3
+    },
+    {
+      "projeto": "CUENTRILHO I",
+      "talhoes": 45
+    },
+    {
+      "projeto": "CUENTRILHO II",
+      "talhoes": 42
+    },
+    {
+      "projeto": "EMA",
+      "talhoes": 8
+    },
+    {
+      "projeto": "EMBIRA",
+      "talhoes": 3
+    },
+    {
+      "projeto": "ESPINILHO",
+      "talhoes": 10
+    },
+    {
+      "projeto": "ESTACIO",
+      "talhoes": 14
+    },
+    {
+      "projeto": "ESTANCIA DA FLORESTA",
+      "talhoes": 15
+    },
+    {
+      "projeto": "ESTANCIA DAS OLIVEIRAS",
+      "talhoes": 5
+    },
+    {
+      "projeto": "ESTANCIA FIRMEZA",
+      "talhoes": 1
+    },
+    {
+      "projeto": "ESTANCIA TARUMA",
+      "talhoes": 5
+    },
+    {
+      "projeto": "ESTRADA REAL I",
+      "talhoes": 15
+    },
+    {
+      "projeto": "FAZENDA TARUMA",
+      "talhoes": 24
+    },
+    {
+      "projeto": "FERRUGEM",
+      "talhoes": 4
+    },
+    {
+      "projeto": "FIGUEIRA",
+      "talhoes": 6
+    },
+    {
+      "projeto": "FORMOSA",
+      "talhoes": 28
+    },
+    {
+      "projeto": "FRIDA",
+      "talhoes": 7
+    },
+    {
+      "projeto": "GIRASSOL",
+      "talhoes": 1
+    },
+    {
+      "projeto": "GIRUA",
+      "talhoes": 8
+    },
+    {
+      "projeto": "GRAPIA",
+      "talhoes": 4
+    },
+    {
+      "projeto": "GUABIJU",
+      "talhoes": 12
+    },
+    {
+      "projeto": "GUARA",
+      "talhoes": 7
+    },
+    {
+      "projeto": "GUATAMBU II",
+      "talhoes": 10
+    },
+    {
+      "projeto": "GUATAMBU III",
+      "talhoes": 1
+    },
+    {
+      "projeto": "GUATAMBU IV",
+      "talhoes": 1
+    },
+    {
+      "projeto": "ITUZINHO",
+      "talhoes": 1
+    },
+    {
+      "projeto": "ITUZINHO II",
+      "talhoes": 2
+    },
+    {
+      "projeto": "IVARO",
+      "talhoes": 4
+    },
+    {
+      "projeto": "JAGUARI",
+      "talhoes": 12
+    },
+    {
+      "projeto": "JAGUARIZINHO",
+      "talhoes": 35
+    },
+    {
+      "projeto": "LAÇO VELHO",
+      "talhoes": 1
+    },
+    {
+      "projeto": "LIRIO",
+      "talhoes": 1
+    },
+    {
+      "projeto": "LIV 02",
+      "talhoes": 37
+    },
+    {
+      "projeto": "LIV 11",
+      "talhoes": 53
+    },
+    {
+      "projeto": "MANTIQUEIRA",
+      "talhoes": 12
+    },
+    {
+      "projeto": "MARICHELE",
+      "talhoes": 3
+    },
+    {
+      "projeto": "MATA GRANDE",
+      "talhoes": 10
+    },
+    {
+      "projeto": "MEIA LUA",
+      "talhoes": 19
+    },
+    {
+      "projeto": "MULITA",
+      "talhoes": 1
+    },
+    {
+      "projeto": "OLHOS DAGUA II",
+      "talhoes": 1
+    },
+    {
+      "projeto": "OURO DO CURUÇU",
+      "talhoes": 4
+    },
+    {
+      "projeto": "PANGARE",
+      "talhoes": 2
+    },
+    {
+      "projeto": "PANORAMA",
+      "talhoes": 28
+    },
+    {
+      "projeto": "PARAISO",
+      "talhoes": 21
+    },
+    {
+      "projeto": "PASSO DA JULIANA",
+      "talhoes": 10
+    },
+    {
+      "projeto": "PASSO DA LARANJEIRA",
+      "talhoes": 1
+    },
+    {
+      "projeto": "PASSO DA ROCHA I",
+      "talhoes": 4
+    },
+    {
+      "projeto": "PASSO DA ROCHA II",
+      "talhoes": 1
+    },
+    {
+      "projeto": "PASSO DA TUNA",
+      "talhoes": 22
+    },
+    {
+      "projeto": "PASSO DAS MERCEDES",
+      "talhoes": 13
+    },
+    {
+      "projeto": "PASSO DO JACQUES",
+      "talhoes": 7
+    },
+    {
+      "projeto": "PASSO DO SALSINHO",
+      "talhoes": 23
+    },
+    {
+      "projeto": "PASSO FUNDO",
+      "talhoes": 8
+    },
+    {
+      "projeto": "PELINCHO",
+      "talhoes": 3
+    },
+    {
+      "projeto": "PEREIRA",
+      "talhoes": 2
+    },
+    {
+      "projeto": "PIRATINI",
+      "talhoes": 1
+    },
+    {
+      "projeto": "PONTA DAS CANAS",
+      "talhoes": 31
+    },
+    {
+      "projeto": "PONTAS DO SALSO",
+      "talhoes": 4
+    },
+    {
+      "projeto": "PREA",
+      "talhoes": 1
+    },
+    {
+      "projeto": "RAIZES",
+      "talhoes": 13
+    },
+    {
+      "projeto": "RINCAO DOS FERNANDES",
+      "talhoes": 7
+    },
+    {
+      "projeto": "RINCAO DOS SOARES",
+      "talhoes": 29
+    },
+    {
+      "projeto": "RINCAO DOS TEIXEIRAS",
+      "talhoes": 1
+    },
+    {
+      "projeto": "RODEIO VELHO",
+      "talhoes": 2
+    },
+    {
+      "projeto": "ROLADOR",
+      "talhoes": 5
+    },
+    {
+      "projeto": "SAG 01",
+      "talhoes": 4
+    },
+    {
+      "projeto": "SAG 06",
+      "talhoes": 6
+    },
+    {
+      "projeto": "SAG 08",
+      "talhoes": 10
+    },
+    {
+      "projeto": "SAG 09",
+      "talhoes": 10
+    },
+    {
+      "projeto": "SAG 12",
+      "talhoes": 8
+    },
+    {
+      "projeto": "SAG 24",
+      "talhoes": 7
+    },
+    {
+      "projeto": "SAG 29",
+      "talhoes": 4
+    },
+    {
+      "projeto": "SAG 30",
+      "talhoes": 17
+    },
+    {
+      "projeto": "SAG 32",
+      "talhoes": 4
+    },
+    {
+      "projeto": "SAG 33",
+      "talhoes": 3
+    },
+    {
+      "projeto": "SAG 35",
+      "talhoes": 2
+    },
+    {
+      "projeto": "SAG 39",
+      "talhoes": 8
+    },
+    {
+      "projeto": "SAG 40",
+      "talhoes": 3
+    },
+    {
+      "projeto": "SAG 41",
+      "talhoes": 13
+    },
+    {
+      "projeto": "SAG 43",
+      "talhoes": 8
+    },
+    {
+      "projeto": "SAIBRO",
+      "talhoes": 3
+    },
+    {
+      "projeto": "SANTA AMALIA",
+      "talhoes": 14
+    },
+    {
+      "projeto": "SANTA BARBARA",
+      "talhoes": 18
+    },
+    {
+      "projeto": "SANTA CLARA",
+      "talhoes": 30
+    },
+    {
+      "projeto": "SANTA FE",
+      "talhoes": 20
+    },
+    {
+      "projeto": "SANTA LURDES",
+      "talhoes": 29
+    },
+    {
+      "projeto": "SANTA MARGARIDA",
+      "talhoes": 13
+    },
+    {
+      "projeto": "SANTA MARIA NITA",
+      "talhoes": 3
+    },
+    {
+      "projeto": "SANTA OLGA",
+      "talhoes": 7
+    },
+    {
+      "projeto": "SANTA TEREZINHA II",
+      "talhoes": 1
+    },
+    {
+      "projeto": "SANTO ANTONIO IV",
+      "talhoes": 3
+    },
+    {
+      "projeto": "SAO BENTO",
+      "talhoes": 16
+    },
+    {
+      "projeto": "SAO BRAS",
+      "talhoes": 36
+    },
+    {
+      "projeto": "SAO DOMINGOS",
+      "talhoes": 3
+    },
+    {
+      "projeto": "SAO FRANCISCO III",
+      "talhoes": 4
+    },
+    {
+      "projeto": "SAO JOAO",
+      "talhoes": 24
+    },
+    {
+      "projeto": "SAO JUVENAL",
+      "talhoes": 1
+    },
+    {
+      "projeto": "SAO MANOEL II",
+      "talhoes": 3
+    },
+    {
+      "projeto": "SAO RAFAEL",
+      "talhoes": 5
+    },
+    {
+      "projeto": "SAO SEPE",
+      "talhoes": 2
+    },
+    {
+      "projeto": "SASSAFRAZ",
+      "talhoes": 8
+    },
+    {
+      "projeto": "SASSAFRAZ II",
+      "talhoes": 2
+    },
+    {
+      "projeto": "SESMARIA SANTO INACIO",
+      "talhoes": 8
+    },
+    {
+      "projeto": "SOSSEGO",
+      "talhoes": 3
+    },
+    {
+      "projeto": "SOSSEGO III",
+      "talhoes": 3
+    },
+    {
+      "projeto": "SOSSEGO IV",
+      "talhoes": 1
+    },
+    {
+      "projeto": "SUSPIRO",
+      "talhoes": 6
+    },
+    {
+      "projeto": "SÃO LUIS DAS EGUAS MOROCHINS",
+      "talhoes": 15
+    },
+    {
+      "projeto": "TAMANDUA",
+      "talhoes": 6
+    },
+    {
+      "projeto": "TAMBORIL",
+      "talhoes": 2
+    },
+    {
+      "projeto": "TAQUAREIRAS",
+      "talhoes": 1
+    },
+    {
+      "projeto": "TAQUAREMBO",
+      "talhoes": 14
+    },
+    {
+      "projeto": "TAQUARI III",
+      "talhoes": 26
+    },
+    {
+      "projeto": "TIARAJU",
+      "talhoes": 27
+    },
+    {
+      "projeto": "TIMBO",
+      "talhoes": 4
+    },
+    {
+      "projeto": "TRES DONOS",
+      "talhoes": 3
+    },
+    {
+      "projeto": "TRES ESTRADAS",
+      "talhoes": 22
+    },
+    {
+      "projeto": "TRES PASSOS",
+      "talhoes": 6
+    },
+    {
+      "projeto": "TREVO",
+      "talhoes": 4
+    },
+    {
+      "projeto": "TUFINE",
+      "talhoes": 2
+    },
+    {
+      "projeto": "TUPANCY",
+      "talhoes": 6
+    },
+    {
+      "projeto": "VALPARAISO",
+      "talhoes": 6
+    },
+    {
+      "projeto": "VILA NOVA",
+      "talhoes": 3
+    },
+    {
+      "projeto": "VILA PALMA",
+      "talhoes": 52
+    },
+    {
+      "projeto": "VILA PALMA II",
+      "talhoes": 7
+    },
+    {
+      "projeto": "VISTA CLARA",
+      "talhoes": 15
+    },
+    {
+      "projeto": "XAVANTE",
+      "talhoes": 15
+    }
+  ]
+}
