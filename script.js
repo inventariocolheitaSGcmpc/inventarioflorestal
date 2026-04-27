@@ -23,13 +23,15 @@ const map = L.map("map", {
 }).setView([-30.3, -54.0], 9);
 
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-  attribution: "&copy; OpenStreetMap contributors"
+  attribution: "&copy; OpenStreetMap contributors",
+  crossOrigin: true
 }).addTo(map);
 
 L.tileLayer(
   "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
   {
-    attribution: "Tiles &copy; Esri"
+    attribution: "Tiles &copy; Esri",
+    crossOrigin: true
   }
 ).addTo(map);
 
@@ -85,6 +87,7 @@ farmFilter.addEventListener("change", () => {
 
 clearSelectionBtn.addEventListener("click", () => {
   state.selectedIds = [];
+  renderMap();
   syncSelectionUI();
 });
 
@@ -97,7 +100,7 @@ exportBtn.addEventListener("click", () => {
   downloadXlsx(rows, currentFarmName());
 });
 
-emailBtn.addEventListener("click", () => {
+emailBtn.addEventListener("click", async () => {
   const rows = selectedRows();
   if (!rows.length) {
     alert("Selecione pelo menos um talhao.");
@@ -105,6 +108,7 @@ emailBtn.addEventListener("click", () => {
   }
 
   downloadXlsx(rows, currentFarmName());
+  const screenshotName = await downloadMapScreenshot(currentFarmName());
 
   const recipients = [
     "pietro.duran@cmpc.com",
@@ -113,7 +117,7 @@ emailBtn.addEventListener("click", () => {
 
   const subject = encodeURIComponent(`Sequencia - ${currentFarmName()}`);
   const body = encodeURIComponent(
-    `Ola,\n\nSegue a sequencia planejada para a fazenda ${currentFarmName()}.\n\nO arquivo foi baixado no seu computador para anexar ao e-mail.`
+    `Ola,\n\nSegue a sequencia planejada para a fazenda ${currentFarmName()}.\n\nOs arquivos foram baixados no seu computador para anexar ao e-mail:\n- HF_${safeFarmName(currentFarmName())}_Sequencia_Talhonar.xlsx\n- ${screenshotName}\n\nNo GitHub Pages o navegador nao consegue anexar arquivos automaticamente ao e-mail.`
   );
 
   window.location.href = `mailto:${recipients}?subject=${subject}&body=${body}`;
@@ -367,8 +371,40 @@ function downloadXlsx(rows, farmName) {
   const workbook = XLSX.utils.book_new();
   const worksheet = XLSX.utils.json_to_sheet(worksheetRows);
   XLSX.utils.book_append_sheet(workbook, worksheet, "Sequencia");
-  const safeFarm = farmName === "Todas" ? "Geral" : farmName.replace(/[^a-zA-Z0-9_-]/g, "_");
+  const safeFarm = safeFarmName(farmName);
   XLSX.writeFile(workbook, `HF_${safeFarm}_Sequencia_Talhonar.xlsx`);
+}
+
+async function downloadMapScreenshot(farmName) {
+  const safeFarm = safeFarmName(farmName);
+  const filename = `HF_${safeFarm}_Mapa_Sequencia_Colheita.png`;
+
+  try {
+    const canvas = await html2canvas(document.getElementById("map"), {
+      useCORS: true,
+      backgroundColor: null,
+      scale: window.devicePixelRatio > 1 ? 2 : 1
+    });
+    canvas.toBlob((blob) => {
+      if (!blob) {
+        return;
+      }
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }, "image/png");
+  } catch (error) {
+    console.warn("Nao foi possivel gerar a imagem do mapa.", error);
+  }
+
+  return filename;
+}
+
+function safeFarmName(farmName) {
+  return farmName === "Todas" ? "Geral" : farmName.replace(/[^a-zA-Z0-9_-]/g, "_");
 }
 
 function getColor(value, min, max) {
