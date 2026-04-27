@@ -367,6 +367,48 @@ th {
   background: #fbfcfa;
 }
 
+.export-stage {
+  position: fixed;
+  left: -10000px;
+  top: 0;
+  width: 1280px;
+  padding: 24px;
+  background: linear-gradient(180deg, #f8fbf4 0%, var(--bg) 100%);
+  z-index: -1;
+}
+
+.export-card {
+  border: 1px solid var(--line);
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow: 0 24px 60px rgba(34, 53, 29, 0.12);
+  overflow: hidden;
+}
+
+.export-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  padding: 24px 28px 18px;
+}
+
+.export-header h2 {
+  margin: 0;
+  font-size: 2.1rem;
+}
+
+.export-logo {
+  width: 120px;
+  height: auto;
+  object-fit: contain;
+}
+
+.export-map {
+  width: 1232px;
+  height: 760px;
+}
+
 @media (max-width: 1100px) {
   .layout {
     grid-template-columns: 1fr;

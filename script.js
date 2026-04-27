@@ -17,6 +17,8 @@ const openMailAppBtn = document.getElementById("openMailAppBtn");
 const copyEmailTextBtn = document.getElementById("copyEmailTextBtn");
 const emailBodyPreview = document.getElementById("emailBodyPreview");
 const downloadEmlBtn = document.getElementById("downloadEmlBtn");
+const exportStage = document.getElementById("exportStage");
+const exportTitle = document.getElementById("exportTitle");
 
 const state = {
   allFeatures: [],
@@ -446,14 +448,25 @@ function createXlsxAttachment(rows, farmName) {
 async function createMapScreenshotAttachment(farmName) {
   const safeFarm = safeFarmName(farmName);
   const filename = `HF_${safeFarm}_Mapa_Sequencia_Colheita.png`;
+  const selectedFeatures = selectedFeatureObjects();
+
+  if (!selectedFeatures.length) {
+    return { filename, blob: null };
+  }
 
   try {
-    const canvas = await html2canvas(document.getElementById("map"), {
+    exportTitle.textContent = `Inventario Florestal - ${farmName}`;
+    const exportMap = await buildExportMap(selectedFeatures);
+    await wait(1200);
+    exportMap.invalidateSize();
+    await wait(400);
+
+    const canvas = await html2canvas(exportStage, {
       useCORS: true,
-      backgroundColor: null,
-      scale: window.devicePixelRatio > 1 ? 2 : 1,
-      onclone: (clonedDoc) => normalizeLeafletClone(clonedDoc)
+      backgroundColor: "#eef2e7",
+      scale: 1
     });
+
     const blob = await new Promise((resolve) => {
       canvas.toBlob((blob) => {
         if (!blob) {
@@ -463,6 +476,10 @@ async function createMapScreenshotAttachment(farmName) {
         resolve(blob);
       }, "image/png");
     });
+
+    exportMap.remove();
+    document.getElementById("exportMap").innerHTML = "";
+
     if (!blob) {
       return { filename, blob: null };
     }
@@ -471,6 +488,7 @@ async function createMapScreenshotAttachment(farmName) {
     console.warn("Nao foi possivel gerar a imagem do mapa.", error);
   }
 
+  document.getElementById("exportMap").innerHTML = "";
   return { filename, blob: null };
 }
 
@@ -547,51 +565,6 @@ function closeEmailModal() {
   emailModal.setAttribute("aria-hidden", "true");
 }
 
-function normalizeLeafletClone(clonedDoc) {
-  const selectors = [
-    ".leaflet-map-pane",
-    ".leaflet-tile-pane",
-    ".leaflet-overlay-pane",
-    ".leaflet-shadow-pane",
-    ".leaflet-marker-pane",
-    ".leaflet-tooltip-pane",
-    ".leaflet-popup-pane",
-    ".leaflet-zoom-animated",
-    ".leaflet-zoom-hide"
-  ];
-
-  clonedDoc.querySelectorAll(selectors.join(",")).forEach((node) => {
-    const style = clonedDoc.defaultView.getComputedStyle(node);
-    const parsed = parseTransform(style.transform);
-    if (!parsed) {
-      return;
-    }
-    node.style.transform = "none";
-    node.style.left = `${parsed.x}px`;
-    node.style.top = `${parsed.y}px`;
-  });
-}
-
-function parseTransform(transformValue) {
-  if (!transformValue || transformValue === "none") {
-    return null;
-  }
-
-  const matrixMatch = transformValue.match(/^matrix\((.+)\)$/);
-  if (matrixMatch) {
-    const values = matrixMatch[1].split(",").map((value) => Number(value.trim()));
-    return { x: values[4] || 0, y: values[5] || 0 };
-  }
-
-  const matrix3dMatch = transformValue.match(/^matrix3d\((.+)\)$/);
-  if (matrix3dMatch) {
-    const values = matrix3dMatch[1].split(",").map((value) => Number(value.trim()));
-    return { x: values[12] || 0, y: values[13] || 0 };
-  }
-
-  return null;
-}
-
 async function buildEmlBlob(draft, attachments) {
   const boundary = `----=_InventarioFlorestal_${Date.now()}`;
   const chunks = [];
@@ -641,6 +614,133 @@ function blobToBase64(blob) {
 
 function wrapBase64(value) {
   return value.replace(/(.{76})/g, "$1\r\n");
+}
+
+async function buildExportMap(selectedFeatures) {
+  const exportMapContainer = document.getElementById("exportMap");
+  exportMapContainer.innerHTML = "";
+
+  const exportMap = L.map(exportMapContainer, {
+    zoomControl: false,
+    attributionControl: true
+  });
+
+  const satelliteLayer = L.tileLayer(
+    "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+    {
+      attribution: "Tiles &copy; Esri",
+      crossOrigin: true
+    }
+  ).addTo(exportMap);
+
+  const values = state.currentFeatures.map((feature) => feature.properties.produtividade);
+  const minValue = Math.min(...values);
+  const maxValue = Math.max(...values);
+
+  const geoJsonLayer = L.geoJSON(
+    {
+      type: "FeatureCollection",
+      features: selectedFeatures
+    },
+    {
+      style: (feature) => ({
+        color: "#ffff00",
+        weight: 4,
+        fillOpacity: 0.32,
+        fillColor: getColor(feature.properties.produtividade, minValue, maxValue)
+      })
+    }
+  ).addTo(exportMap);
+
+  const points = selectedFeatures
+    .map((feature) => turfCentroid(feature))
+    .filter(Boolean);
+
+  selectedFeatures.forEach((feature, index) => {
+    const center = turfCentroid(feature);
+    if (!center) return;
+
+    L.marker([center[1], center[0]], {
+      interactive: false,
+      icon: L.divIcon({
+        className: "sequence-index",
+        html: `<div class="sequence-label">${index + 1}</div>`
+      })
+    }).addTo(exportMap);
+  });
+
+  if (points.length > 1) {
+    L.polyline(points.map(([lng, lat]) => [lat, lng]), {
+      color: "#ffff00",
+      weight: 5,
+      dashArray: "8, 12",
+      opacity: 1
+    }).addTo(exportMap);
+  }
+
+  exportMap.fitBounds(geoJsonLayer.getBounds(), { padding: [40, 40] });
+
+  addExportLegend(exportMap, minValue, maxValue);
+
+  await waitForLeafletTiles(exportMap, [satelliteLayer]);
+
+  return exportMap;
+}
+
+function addExportLegend(targetMap, minValue, maxValue) {
+  const exportLegend = L.control({ position: "bottomright" });
+  exportLegend.onAdd = function onAdd() {
+    const div = L.DomUtil.create("div", "info legend");
+    div.innerHTML = `
+      <div style="padding:12px 14px;background:rgba(255,255,255,.92);border-radius:16px;border:1px solid rgba(0,0,0,.08);box-shadow:0 24px 60px rgba(34,53,29,.12);font:12px Manrope,sans-serif;">
+        <strong style="display:block;margin-bottom:8px;">VCSC (m3/ha)</strong>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span>${formatNumber(minValue)}</span>
+          <div style="width:140px;height:12px;border-radius:999px;background:linear-gradient(90deg,#d73027,#fee08b,#1a9850);"></div>
+          <span>${formatNumber(maxValue)}</span>
+        </div>
+      </div>
+    `;
+    return div;
+  };
+  exportLegend.addTo(targetMap);
+}
+
+function waitForLeafletTiles(targetMap, layers) {
+  return new Promise((resolve) => {
+    let remaining = 0;
+    let done = false;
+
+    const finish = () => {
+      if (!done) {
+        done = true;
+        resolve();
+      }
+    };
+
+    const register = (layer) => {
+      if (!layer || typeof layer.isLoading !== "function") {
+        return;
+      }
+      if (layer.isLoading()) {
+        remaining += 1;
+        layer.once("load", () => {
+          remaining -= 1;
+          if (remaining <= 0) {
+            window.setTimeout(finish, 250);
+          }
+        });
+      }
+    };
+
+    layers.forEach(register);
+    targetMap.whenReady(() => {
+      if (remaining === 0) {
+        window.setTimeout(finish, 500);
+      }
+    });
+    window.setTimeout(finish, 3500);
+  });
 }
 
 function getColor(value, min, max) {
