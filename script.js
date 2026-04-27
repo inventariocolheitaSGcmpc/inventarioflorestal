@@ -108,7 +108,9 @@ emailBtn.addEventListener("click", async () => {
   }
 
   downloadXlsx(rows, currentFarmName());
+  await wait(250);
   const screenshotName = await downloadMapScreenshot(currentFarmName());
+  await wait(250);
 
   const recipients = [
     "pietro.duran@cmpc.com",
@@ -385,17 +387,23 @@ async function downloadMapScreenshot(farmName) {
       backgroundColor: null,
       scale: window.devicePixelRatio > 1 ? 2 : 1
     });
-    canvas.toBlob((blob) => {
-      if (!blob) {
-        return;
-      }
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = filename;
-      link.click();
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
-    }, "image/png");
+    await new Promise((resolve) => {
+      canvas.toBlob((blob) => {
+        if (!blob) {
+          resolve();
+          return;
+        }
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = filename;
+        link.click();
+        setTimeout(() => {
+          URL.revokeObjectURL(url);
+          resolve();
+        }, 1000);
+      }, "image/png");
+    });
   } catch (error) {
     console.warn("Nao foi possivel gerar a imagem do mapa.", error);
   }
@@ -405,6 +413,10 @@ async function downloadMapScreenshot(farmName) {
 
 function safeFarmName(farmName) {
   return farmName === "Todas" ? "Geral" : farmName.replace(/[^a-zA-Z0-9_-]/g, "_");
+}
+
+function wait(ms) {
+  return new Promise((resolve) => window.setTimeout(resolve, ms));
 }
 
 function getColor(value, min, max) {
