@@ -291,6 +291,82 @@ th {
   color: #1d1d1d;
 }
 
+.email-modal.hidden {
+  display: none;
+}
+
+.email-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 5000;
+}
+
+.email-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(9, 17, 11, 0.42);
+  backdrop-filter: blur(4px);
+}
+
+.email-modal-card {
+  position: relative;
+  width: min(760px, calc(100vw - 32px));
+  margin: 6vh auto 0;
+  padding: 22px;
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.98);
+  border: 1px solid var(--line);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.18);
+}
+
+.email-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.email-modal-header h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.modal-close {
+  border: 0;
+  background: #edf2eb;
+  border-radius: 999px;
+  padding: 10px 14px;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.email-modal-copy {
+  margin: 0 0 16px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.email-modal-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.email-preview {
+  width: 100%;
+  min-height: 220px;
+  resize: vertical;
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  padding: 14px;
+  font: 13px/1.5 "Manrope", sans-serif;
+  color: var(--text);
+  background: #fbfcfa;
+}
+
 @media (max-width: 1100px) {
   .layout {
     grid-template-columns: 1fr;
@@ -304,5 +380,9 @@ th {
   #map {
     min-height: 65vh;
     height: 65vh;
+  }
+
+  .email-modal-actions {
+    grid-template-columns: 1fr;
   }
 }

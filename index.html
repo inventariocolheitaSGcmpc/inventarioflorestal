@@ -47,7 +47,7 @@
             <p class="empty-state">Nenhum talhao selecionado.</p>
           </section>
 
-          <section class="panel table-panel">
+        <section class="panel table-panel">
             <div class="panel-header">
               <h2>Sequencia talhonar</h2>
               <span id="sequenceCount" class="badge">0 itens</span>
@@ -89,6 +89,26 @@
           </section>
         </section>
       </main>
+    </div>
+
+    <div id="emailModal" class="email-modal hidden" aria-hidden="true">
+      <div class="email-modal-backdrop" id="emailModalBackdrop"></div>
+      <div class="email-modal-card" role="dialog" aria-modal="true" aria-labelledby="emailModalTitle">
+        <div class="email-modal-header">
+          <h2 id="emailModalTitle">Preparar e-mail</h2>
+          <button id="closeEmailModalBtn" class="modal-close" type="button">Fechar</button>
+        </div>
+        <p class="email-modal-copy">
+          Os arquivos foram baixados no seu computador. Escolha onde deseja abrir o rascunho do e-mail.
+        </p>
+        <div class="email-modal-actions">
+          <button id="openOutlookBtn" class="btn btn-primary" type="button">Abrir no Outlook</button>
+          <button id="openGmailBtn" class="btn btn-secondary" type="button">Abrir no Gmail</button>
+          <button id="openMailAppBtn" class="btn btn-muted" type="button">Abrir no app de e-mail</button>
+          <button id="copyEmailTextBtn" class="btn btn-muted" type="button">Copiar texto do e-mail</button>
+        </div>
+        <textarea id="emailBodyPreview" class="email-preview" readonly></textarea>
+      </div>
     </div>
 
     <script

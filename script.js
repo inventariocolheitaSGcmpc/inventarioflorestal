@@ -8,12 +8,21 @@ const sequenceCount = document.getElementById("sequenceCount");
 const farmCount = document.getElementById("farmCount");
 const plotCount = document.getElementById("plotCount");
 const generatedAt = document.getElementById("generatedAt");
+const emailModal = document.getElementById("emailModal");
+const emailModalBackdrop = document.getElementById("emailModalBackdrop");
+const closeEmailModalBtn = document.getElementById("closeEmailModalBtn");
+const openOutlookBtn = document.getElementById("openOutlookBtn");
+const openGmailBtn = document.getElementById("openGmailBtn");
+const openMailAppBtn = document.getElementById("openMailAppBtn");
+const copyEmailTextBtn = document.getElementById("copyEmailTextBtn");
+const emailBodyPreview = document.getElementById("emailBodyPreview");
 
 const state = {
   allFeatures: [],
   currentFeatures: [],
   featureLayers: new Map(),
-  selectedIds: []
+  selectedIds: [],
+  pendingEmailDraft: null
 };
 
 const map = L.map("map", {
@@ -112,17 +121,44 @@ emailBtn.addEventListener("click", async () => {
   const screenshotName = await downloadMapScreenshot(currentFarmName());
   await wait(250);
 
-  const recipients = [
-    "pietro.duran@cmpc.com",
-    "matheus.roberto@cmpc.com"
-  ].join(";");
+  state.pendingEmailDraft = buildEmailDraft(rows, currentFarmName(), screenshotName);
+  openEmailModal(state.pendingEmailDraft);
+});
 
-  const subject = encodeURIComponent(`Sequencia - ${currentFarmName()}`);
-  const body = encodeURIComponent(
-    `Ola,\n\nSegue a sequencia planejada para a fazenda ${currentFarmName()}.\n\nOs arquivos foram baixados no seu computador para anexar ao e-mail:\n- HF_${safeFarmName(currentFarmName())}_Sequencia_Talhonar.xlsx\n- ${screenshotName}\n\nNo GitHub Pages o navegador nao consegue anexar arquivos automaticamente ao e-mail.`
-  );
+closeEmailModalBtn.addEventListener("click", closeEmailModal);
+emailModalBackdrop.addEventListener("click", closeEmailModal);
 
-  window.location.href = `mailto:${recipients}?subject=${subject}&body=${body}`;
+openOutlookBtn.addEventListener("click", () => {
+  if (!state.pendingEmailDraft) return;
+  const draft = state.pendingEmailDraft;
+  const url = `https://outlook.office.com/mail/deeplink/compose?to=${encodeURIComponent(draft.toComma)}&subject=${encodeURIComponent(draft.subject)}&body=${encodeURIComponent(draft.body)}`;
+  window.open(url, "_blank", "noopener,noreferrer");
+});
+
+openGmailBtn.addEventListener("click", () => {
+  if (!state.pendingEmailDraft) return;
+  const draft = state.pendingEmailDraft;
+  const url = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(draft.toComma)}&su=${encodeURIComponent(draft.subject)}&body=${encodeURIComponent(draft.body)}`;
+  window.open(url, "_blank", "noopener,noreferrer");
+});
+
+openMailAppBtn.addEventListener("click", () => {
+  if (!state.pendingEmailDraft) return;
+  const draft = state.pendingEmailDraft;
+  window.location.href = `mailto:${draft.toSemicolon}?subject=${encodeURIComponent(draft.subject)}&body=${encodeURIComponent(draft.body)}`;
+});
+
+copyEmailTextBtn.addEventListener("click", async () => {
+  if (!state.pendingEmailDraft) return;
+  try {
+    await navigator.clipboard.writeText(state.pendingEmailDraft.fullText);
+    copyEmailTextBtn.textContent = "Texto copiado";
+    window.setTimeout(() => {
+      copyEmailTextBtn.textContent = "Copiar texto do e-mail";
+    }, 1800);
+  } catch (error) {
+    console.warn("Nao foi possivel copiar o texto.", error);
+  }
 });
 
 function normalizeProperties(properties) {
@@ -417,6 +453,59 @@ function safeFarmName(farmName) {
 
 function wait(ms) {
   return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
+
+function buildEmailDraft(rows, farmName, screenshotName) {
+  const recipients = [
+    "pietro.duran@cmpc.com",
+    "matheus.roberto@cmpc.com"
+  ];
+  const safeFarm = safeFarmName(farmName);
+  const excelName = `HF_${safeFarm}_Sequencia_Talhonar.xlsx`;
+  const totalArea = rows.reduce((acc, row) => acc + row.area, 0);
+  const totalVcsc = rows.reduce((acc, row) => acc + row.vcsc, 0);
+  const orderLines = rows
+    .map((row) => `${row.ordem}. ${row.fazendaTalhao} | Area: ${formatNumber(row.area)} ha | VCSC: ${formatNumber(row.vcsc)} m3 | VMI: ${formatNumber(row.vmi)} m3`)
+    .join("\n");
+
+  const body = [
+    "Ola,",
+    "",
+    `Segue a sequencia planejada para a fazenda ${farmName}.`,
+    "",
+    "Resumo da selecao:",
+    `- Talhoes selecionados: ${rows.length}`,
+    `- Area total: ${formatNumber(totalArea)} ha`,
+    `- Volume Comercial (VCSC): ${formatNumber(totalVcsc)} m3`,
+    "",
+    "Sequencia selecionada:",
+    orderLines,
+    "",
+    "Arquivos baixados para anexar:",
+    `- ${excelName}`,
+    `- ${screenshotName}`,
+    "",
+    "Observacao: em um site hospedado no GitHub Pages, os anexos nao podem ser inseridos automaticamente no e-mail. Por isso, os arquivos foram baixados no seu computador para voce anexar antes de enviar."
+  ].join("\n");
+
+  return {
+    toComma: recipients.join(","),
+    toSemicolon: recipients.join(";"),
+    subject: `Sequencia - ${farmName}`,
+    body,
+    fullText: `Para: ${recipients.join("; ")}\nAssunto: Sequencia - ${farmName}\n\n${body}`
+  };
+}
+
+function openEmailModal(draft) {
+  emailBodyPreview.value = draft.fullText;
+  emailModal.classList.remove("hidden");
+  emailModal.setAttribute("aria-hidden", "false");
+}
+
+function closeEmailModal() {
+  emailModal.classList.add("hidden");
+  emailModal.setAttribute("aria-hidden", "true");
 }
 
 function getColor(value, min, max) {
