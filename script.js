@@ -17,6 +17,8 @@ const openMailAppBtn = document.getElementById("openMailAppBtn");
 const copyEmailTextBtn = document.getElementById("copyEmailTextBtn");
 const emailBodyPreview = document.getElementById("emailBodyPreview");
 const downloadEmlBtn = document.getElementById("downloadEmlBtn");
+const downloadExcelBtn = document.getElementById("downloadExcelBtn");
+const downloadPrintBtn = document.getElementById("downloadPrintBtn");
 const exportStage = document.getElementById("exportStage");
 const exportTitle = document.getElementById("exportTitle");
 
@@ -26,7 +28,8 @@ const state = {
   featureLayers: new Map(),
   selectedIds: [],
   pendingEmailDraft: null,
-  pendingAttachments: null
+  pendingAttachments: null,
+  pendingFarmName: null
 };
 
 const map = L.map("map", {
@@ -121,18 +124,14 @@ emailBtn.addEventListener("click", async () => {
   }
 
   const excelAttachment = createXlsxAttachment(rows, currentFarmName());
-  await wait(250);
   const screenshotAttachment = await createMapScreenshotAttachment(currentFarmName());
-  const bundleAttachment = await createAttachmentBundle(currentFarmName(), excelAttachment, screenshotAttachment);
-  downloadBlob(bundleAttachment.blob, bundleAttachment.filename);
-  await wait(250);
 
   const screenshotName = screenshotAttachment?.filename || `HF_${safeFarmName(currentFarmName())}_Mapa_Sequencia_Colheita.png`;
   state.pendingAttachments = {
     excel: excelAttachment,
-    screenshot: screenshotAttachment,
-    bundle: bundleAttachment
+    screenshot: screenshotAttachment
   };
+  state.pendingFarmName = currentFarmName();
   state.pendingEmailDraft = buildEmailDraft(rows, currentFarmName(), screenshotName);
   openEmailModal(state.pendingEmailDraft);
 });
@@ -158,6 +157,24 @@ openMailAppBtn.addEventListener("click", () => {
   if (!state.pendingEmailDraft) return;
   const draft = state.pendingEmailDraft;
   window.location.href = `mailto:${draft.toSemicolon}?subject=${encodeURIComponent(draft.subject)}&body=${encodeURIComponent(draft.body)}`;
+});
+
+downloadExcelBtn.addEventListener("click", () => {
+  if (!state.pendingAttachments?.excel?.blob) {
+    return;
+  }
+  downloadBlob(state.pendingAttachments.excel.blob, state.pendingAttachments.excel.filename);
+});
+
+downloadPrintBtn.addEventListener("click", async () => {
+  if (!state.pendingAttachments?.screenshot?.blob && state.pendingFarmName) {
+    state.pendingAttachments.screenshot = await createMapScreenshotAttachment(state.pendingFarmName);
+  }
+  if (!state.pendingAttachments?.screenshot?.blob) {
+    alert("Nao foi possivel gerar o print nesta tentativa.");
+    return;
+  }
+  downloadBlob(state.pendingAttachments.screenshot.blob, state.pendingAttachments.screenshot.filename);
 });
 
 downloadEmlBtn.addEventListener("click", async () => {
@@ -530,6 +547,9 @@ function buildEmailDraft(rows, farmName, screenshotName) {
 
 function openEmailModal(draft) {
   emailBodyPreview.value = draft.fullText;
+  const hasPrint = Boolean(state.pendingAttachments?.screenshot?.blob);
+  downloadPrintBtn.disabled = false;
+  downloadEmlBtn.disabled = !hasPrint;
   emailModal.classList.remove("hidden");
   emailModal.setAttribute("aria-hidden", "false");
 }
@@ -590,19 +610,6 @@ function wrapBase64(value) {
   return value.replace(/(.{76})/g, "$1\r\n");
 }
 
-async function createAttachmentBundle(farmName, excelAttachment, screenshotAttachment) {
-  const safeFarm = safeFarmName(farmName);
-  const zip = new JSZip();
-  zip.file(excelAttachment.filename, excelAttachment.blob);
-  if (screenshotAttachment?.blob) {
-    zip.file(screenshotAttachment.filename, screenshotAttachment.blob);
-  }
-  const blob = await zip.generateAsync({ type: "blob" });
-  return {
-    filename: `HF_${safeFarm}_Anexos_Email.zip`,
-    blob
-  };
-}
 
 async function buildExportMap(selectedFeatures) {
   const exportMapContainer = document.getElementById("exportMap");
