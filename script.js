@@ -16,9 +16,6 @@ const openGmailBtn = document.getElementById("openGmailBtn");
 const openMailAppBtn = document.getElementById("openMailAppBtn");
 const copyEmailTextBtn = document.getElementById("copyEmailTextBtn");
 const emailBodyPreview = document.getElementById("emailBodyPreview");
-const downloadEmlBtn = document.getElementById("downloadEmlBtn");
-const downloadExcelBtn = document.getElementById("downloadExcelBtn");
-const downloadPrintBtn = document.getElementById("downloadPrintBtn");
 const exportStage = document.getElementById("exportStage");
 const exportTitle = document.getElementById("exportTitle");
 
@@ -28,8 +25,7 @@ const state = {
   featureLayers: new Map(),
   selectedIds: [],
   pendingEmailDraft: null,
-  pendingAttachments: null,
-  pendingFarmName: null
+  pendingAttachments: null
 };
 
 const map = L.map("map", {
@@ -113,7 +109,8 @@ exportBtn.addEventListener("click", () => {
     alert("Selecione pelo menos um talhao.");
     return;
   }
-  downloadXlsx(rows, currentFarmName());
+  const excelAttachment = createXlsxAttachment(rows, currentFarmName());
+  downloadBlob(excelAttachment.blob, excelAttachment.filename);
 });
 
 emailBtn.addEventListener("click", async () => {
@@ -125,13 +122,19 @@ emailBtn.addEventListener("click", async () => {
 
   const excelAttachment = createXlsxAttachment(rows, currentFarmName());
   const screenshotAttachment = await createMapScreenshotAttachment(currentFarmName());
+  downloadBlob(excelAttachment.blob, excelAttachment.filename);
+
+  if (screenshotAttachment?.blob) {
+    downloadBlob(screenshotAttachment.blob, screenshotAttachment.filename);
+  } else {
+    alert("A sequencia em Excel foi baixada, mas nao foi possivel gerar o print nesta tentativa.");
+  }
 
   const screenshotName = screenshotAttachment?.filename || `HF_${safeFarmName(currentFarmName())}_Mapa_Sequencia_Colheita.png`;
   state.pendingAttachments = {
     excel: excelAttachment,
     screenshot: screenshotAttachment
   };
-  state.pendingFarmName = currentFarmName();
   state.pendingEmailDraft = buildEmailDraft(rows, currentFarmName(), screenshotName);
   openEmailModal(state.pendingEmailDraft);
 });
@@ -157,37 +160,6 @@ openMailAppBtn.addEventListener("click", () => {
   if (!state.pendingEmailDraft) return;
   const draft = state.pendingEmailDraft;
   window.location.href = `mailto:${draft.toSemicolon}?subject=${encodeURIComponent(draft.subject)}&body=${encodeURIComponent(draft.body)}`;
-});
-
-downloadExcelBtn.addEventListener("click", () => {
-  if (!state.pendingAttachments?.excel?.blob) {
-    return;
-  }
-  downloadBlob(state.pendingAttachments.excel.blob, state.pendingAttachments.excel.filename);
-});
-
-downloadPrintBtn.addEventListener("click", async () => {
-  if (!state.pendingAttachments?.screenshot?.blob && state.pendingFarmName) {
-    state.pendingAttachments.screenshot = await createMapScreenshotAttachment(state.pendingFarmName);
-  }
-  if (!state.pendingAttachments?.screenshot?.blob) {
-    alert("Nao foi possivel gerar o print nesta tentativa.");
-    return;
-  }
-  downloadBlob(state.pendingAttachments.screenshot.blob, state.pendingAttachments.screenshot.filename);
-});
-
-downloadEmlBtn.addEventListener("click", async () => {
-  if (!state.pendingEmailDraft || !state.pendingAttachments?.excel) {
-    return;
-  }
-  try {
-    const emlBlob = await buildEmlBlob(state.pendingEmailDraft, state.pendingAttachments);
-    const safeFarm = safeFarmName(currentFarmName());
-    downloadBlob(emlBlob, `HF_${safeFarm}_Rascunho_Email.eml`);
-  } catch (error) {
-    console.warn("Nao foi possivel gerar o arquivo .eml.", error);
-  }
 });
 
 copyEmailTextBtn.addEventListener("click", async () => {
@@ -547,9 +519,6 @@ function buildEmailDraft(rows, farmName, screenshotName) {
 
 function openEmailModal(draft) {
   emailBodyPreview.value = draft.fullText;
-  const hasPrint = Boolean(state.pendingAttachments?.screenshot?.blob);
-  downloadPrintBtn.disabled = false;
-  downloadEmlBtn.disabled = !hasPrint;
   emailModal.classList.remove("hidden");
   emailModal.setAttribute("aria-hidden", "false");
 }
@@ -558,58 +527,6 @@ function closeEmailModal() {
   emailModal.classList.add("hidden");
   emailModal.setAttribute("aria-hidden", "true");
 }
-
-async function buildEmlBlob(draft, attachments) {
-  const boundary = `----=_InventarioFlorestal_${Date.now()}`;
-  const chunks = [];
-
-  chunks.push(`To: ${draft.toComma}`);
-  chunks.push(`Subject: ${draft.subject}`);
-  chunks.push("MIME-Version: 1.0");
-  chunks.push(`Content-Type: multipart/mixed; boundary="${boundary}"`);
-  chunks.push("");
-  chunks.push(`--${boundary}`);
-  chunks.push('Content-Type: text/plain; charset="UTF-8"');
-  chunks.push("Content-Transfer-Encoding: 8bit");
-  chunks.push("");
-  chunks.push(draft.body);
-  chunks.push("");
-
-  const allAttachments = [attachments.excel, attachments.screenshot].filter((item) => item?.blob);
-  for (const attachment of allAttachments) {
-    const base64 = await blobToBase64(attachment.blob);
-    chunks.push(`--${boundary}`);
-    chunks.push(`Content-Type: ${attachment.blob.type || "application/octet-stream"}; name="${attachment.filename}"`);
-    chunks.push("Content-Transfer-Encoding: base64");
-    chunks.push(`Content-Disposition: attachment; filename="${attachment.filename}"`);
-    chunks.push("");
-    chunks.push(wrapBase64(base64));
-    chunks.push("");
-  }
-
-  chunks.push(`--${boundary}--`);
-  chunks.push("");
-
-  return new Blob([chunks.join("\r\n")], { type: "message/rfc822" });
-}
-
-function blobToBase64(blob) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const result = String(reader.result || "");
-      const base64 = result.split(",")[1] || "";
-      resolve(base64);
-    };
-    reader.onerror = reject;
-    reader.readAsDataURL(blob);
-  });
-}
-
-function wrapBase64(value) {
-  return value.replace(/(.{76})/g, "$1\r\n");
-}
-
 
 async function buildExportMap(selectedFeatures) {
   const exportMapContainer = document.getElementById("exportMap");
