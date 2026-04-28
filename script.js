@@ -121,18 +121,17 @@ emailBtn.addEventListener("click", async () => {
   }
 
   const excelAttachment = createXlsxAttachment(rows, currentFarmName());
-  downloadBlob(excelAttachment.blob, excelAttachment.filename);
   await wait(250);
   const screenshotAttachment = await createMapScreenshotAttachment(currentFarmName());
-  if (screenshotAttachment?.blob) {
-    downloadBlob(screenshotAttachment.blob, screenshotAttachment.filename);
-  }
+  const bundleAttachment = await createAttachmentBundle(currentFarmName(), excelAttachment, screenshotAttachment);
+  downloadBlob(bundleAttachment.blob, bundleAttachment.filename);
   await wait(250);
 
   const screenshotName = screenshotAttachment?.filename || `HF_${safeFarmName(currentFarmName())}_Mapa_Sequencia_Colheita.png`;
   state.pendingAttachments = {
     excel: excelAttachment,
-    screenshot: screenshotAttachment
+    screenshot: screenshotAttachment,
+    bundle: bundleAttachment
   };
   state.pendingEmailDraft = buildEmailDraft(rows, currentFarmName(), screenshotName);
   openEmailModal(state.pendingEmailDraft);
@@ -542,7 +541,7 @@ function buildEmailDraft(rows, farmName, screenshotName) {
     toSemicolon: recipients.join(";"),
     subject: `Sequencia - ${farmName}`,
     body,
-    fullText: `Para: ${recipients.join("; ")}\nAssunto: Sequencia - ${farmName}\n\n${body}`
+    fullText: body
   };
 }
 
@@ -606,6 +605,20 @@ function blobToBase64(blob) {
 
 function wrapBase64(value) {
   return value.replace(/(.{76})/g, "$1\r\n");
+}
+
+async function createAttachmentBundle(farmName, excelAttachment, screenshotAttachment) {
+  const safeFarm = safeFarmName(farmName);
+  const zip = new JSZip();
+  zip.file(excelAttachment.filename, excelAttachment.blob);
+  if (screenshotAttachment?.blob) {
+    zip.file(screenshotAttachment.filename, screenshotAttachment.blob);
+  }
+  const blob = await zip.generateAsync({ type: "blob" });
+  return {
+    filename: `HF_${safeFarm}_Anexos_Email.zip`,
+    blob
+  };
 }
 
 async function buildExportMap(selectedFeatures) {
