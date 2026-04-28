@@ -454,17 +454,8 @@ async function createMapScreenshotAttachment(farmName) {
   }
 
   try {
-    exportTitle.textContent = `Inventario Florestal - ${farmName}`;
-    const exportMap = await buildExportMap(selectedFeatures);
-    await wait(1200);
-    exportMap.invalidateSize();
-    await wait(400);
-    const mapCanvas = await renderLeafletMapToCanvas(exportMap);
-    const canvas = composeExportCanvas(mapCanvas, farmName);
+    const canvas = renderSequenceCanvas(selectedFeatures, farmName);
     const blob = await canvasToBlob(canvas);
-
-    exportMap.remove();
-    document.getElementById("exportMap").innerHTML = "";
 
     if (!blob) {
       return { filename, blob: null };
@@ -474,7 +465,6 @@ async function createMapScreenshotAttachment(farmName) {
     console.warn("Nao foi possivel gerar a imagem do mapa.", error);
   }
 
-  document.getElementById("exportMap").innerHTML = "";
   return { filename, blob: null };
 }
 
@@ -755,6 +745,193 @@ function roundRect(ctx, x, y, width, height, radius) {
   ctx.lineTo(x, y + radius);
   ctx.quadraticCurveTo(x, y, x + radius, y);
   ctx.closePath();
+}
+
+function renderSequenceCanvas(selectedFeatures, farmName) {
+  const width = 1280;
+  const height = 920;
+  const headerHeight = 150;
+  const footerHeight = 70;
+  const mapX = 40;
+  const mapY = headerHeight + 20;
+  const mapWidth = width - 80;
+  const mapHeight = height - headerHeight - footerHeight - 40;
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext("2d");
+
+  ctx.fillStyle = "#eef2e7";
+  ctx.fillRect(0, 0, width, height);
+
+  roundRect(ctx, 24, 24, width - 48, height - 48, 28);
+  ctx.fillStyle = "rgba(255,255,255,0.98)";
+  ctx.fill();
+  ctx.strokeStyle = "rgba(22,33,23,0.12)";
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  ctx.fillStyle = "#2f6b3b";
+  ctx.font = "800 16px Manrope, sans-serif";
+  ctx.fillText("SEQUENCIA DE COLHEITA", 56, 72);
+  ctx.fillStyle = "#162117";
+  ctx.font = "800 40px Manrope, sans-serif";
+  ctx.fillText(`Inventario Florestal - ${farmName}`, 56, 118);
+
+  ctx.fillStyle = "#f8fbf4";
+  roundRect(ctx, mapX, mapY, mapWidth, mapHeight, 22);
+  ctx.fill();
+  ctx.strokeStyle = "rgba(22,33,23,0.10)";
+  ctx.stroke();
+
+  const bbox = getFeatureBounds(selectedFeatures);
+  const projected = projectFeatures(selectedFeatures, bbox, mapWidth, mapHeight, mapX, mapY);
+  const values = selectedFeatures.map((feature) => feature.properties.produtividade);
+  const minValue = Math.min(...values);
+  const maxValue = Math.max(...values);
+
+  projected.forEach((feature) => {
+    feature.paths.forEach((polygon) => {
+      ctx.beginPath();
+      polygon.forEach((ring) => {
+        ring.forEach((point, index) => {
+          if (index === 0) {
+            ctx.moveTo(point.x, point.y);
+          } else {
+            ctx.lineTo(point.x, point.y);
+          }
+        });
+        ctx.closePath();
+      });
+      ctx.fillStyle = getColor(feature.properties.produtividade, minValue, maxValue);
+      ctx.globalAlpha = 0.34;
+      ctx.fill("evenodd");
+      ctx.globalAlpha = 1;
+      ctx.strokeStyle = "#fff34f";
+      ctx.lineWidth = 4;
+      ctx.stroke();
+      ctx.strokeStyle = "#222222";
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    });
+  });
+
+  const centers = projected.map((feature) => feature.center);
+  if (centers.length > 1) {
+    ctx.beginPath();
+    centers.forEach((center, index) => {
+      if (index === 0) {
+        ctx.moveTo(center.x, center.y);
+      } else {
+        ctx.lineTo(center.x, center.y);
+      }
+    });
+    ctx.strokeStyle = "#ffe600";
+    ctx.lineWidth = 5;
+    ctx.setLineDash([10, 12]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  projected.forEach((feature, index) => {
+    const { x, y } = feature.center;
+    ctx.beginPath();
+    ctx.arc(x, y, 16, 0, Math.PI * 2);
+    ctx.fillStyle = "#ffffff";
+    ctx.fill();
+    ctx.strokeStyle = "#222222";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.fillStyle = "#111111";
+    ctx.font = "800 18px Manrope, sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(String(index + 1), x, y + 0.5);
+
+    ctx.textAlign = "left";
+    ctx.textBaseline = "alphabetic";
+    ctx.fillStyle = "#d9534f";
+    ctx.font = "800 15px Manrope, sans-serif";
+    ctx.fillText(feature.properties.cd_talhao, x + 18, y - 10);
+  });
+
+  drawExportLegend(ctx, minValue, maxValue, width - 260, height - 120);
+
+  return canvas;
+}
+
+function getFeatureBounds(features) {
+  const allPoints = [];
+  features.forEach((feature) => collectCoordinates(feature.geometry.coordinates, allPoints));
+  const xs = allPoints.map((point) => point[0]);
+  const ys = allPoints.map((point) => point[1]);
+  return {
+    minX: Math.min(...xs),
+    maxX: Math.max(...xs),
+    minY: Math.min(...ys),
+    maxY: Math.max(...ys)
+  };
+}
+
+function projectFeatures(features, bbox, mapWidth, mapHeight, offsetX, offsetY) {
+  const padding = 40;
+  const usableWidth = mapWidth - padding * 2;
+  const usableHeight = mapHeight - padding * 2;
+  const widthSpan = Math.max(bbox.maxX - bbox.minX, 0.000001);
+  const heightSpan = Math.max(bbox.maxY - bbox.minY, 0.000001);
+  const scale = Math.min(usableWidth / widthSpan, usableHeight / heightSpan);
+
+  const projectPoint = ([x, y]) => ({
+    x: offsetX + padding + (x - bbox.minX) * scale,
+    y: offsetY + mapHeight - padding - (y - bbox.minY) * scale
+  });
+
+  return features.map((feature) => {
+    const paths = geometryToProjectedPaths(feature.geometry, projectPoint);
+    const centroid = turfCentroid(feature) || [bbox.minX, bbox.minY];
+    return {
+      properties: feature.properties,
+      paths,
+      center: projectPoint(centroid)
+    };
+  });
+}
+
+function geometryToProjectedPaths(geometry, projectPoint) {
+  if (geometry.type === "Polygon") {
+    return [geometry.coordinates.map((ring) => ring.map(projectPoint))];
+  }
+  if (geometry.type === "MultiPolygon") {
+    return geometry.coordinates.map((polygon) => polygon.map((ring) => ring.map(projectPoint)));
+  }
+  return [];
+}
+
+function drawExportLegend(ctx, minValue, maxValue, x, y) {
+  const width = 200;
+  const height = 72;
+  roundRect(ctx, x, y, width, height, 18);
+  ctx.fillStyle = "rgba(255,255,255,0.94)";
+  ctx.fill();
+  ctx.strokeStyle = "rgba(0,0,0,0.08)";
+  ctx.stroke();
+
+  ctx.fillStyle = "#162117";
+  ctx.font = "700 13px Manrope, sans-serif";
+  ctx.fillText("VCSC (m3/ha)", x + 14, y + 22);
+
+  const gradient = ctx.createLinearGradient(x + 14, y + 42, x + 154, y + 42);
+  gradient.addColorStop(0, "#d73027");
+  gradient.addColorStop(0.5, "#fee08b");
+  gradient.addColorStop(1, "#1a9850");
+  ctx.fillStyle = gradient;
+  roundRect(ctx, x + 14, y + 34, 140, 12, 6);
+  ctx.fill();
+
+  ctx.fillStyle = "#5f6f60";
+  ctx.font = "600 11px Manrope, sans-serif";
+  ctx.fillText(formatNumber(minValue), x + 14, y + 62);
+  ctx.fillText(formatNumber(maxValue), x + 118, y + 62);
 }
 
 function addExportLegend(targetMap, minValue, maxValue) {
