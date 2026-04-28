@@ -517,8 +517,6 @@ function buildEmailDraft(rows, farmName, screenshotName) {
     "pietro.duran@cmpc.com",
     "matheus.roberto@cmpc.com"
   ];
-  const safeFarm = safeFarmName(farmName);
-  const excelName = `HF_${safeFarm}_Sequencia_Talhonar.xlsx`;
   const totalArea = rows.reduce((acc, row) => acc + row.area, 0);
   const totalVcsc = rows.reduce((acc, row) => acc + row.vcsc, 0);
   const orderLines = rows
@@ -536,13 +534,7 @@ function buildEmailDraft(rows, farmName, screenshotName) {
     `- Volume Comercial (VCSC): ${formatNumber(totalVcsc)} m3`,
     "",
     "Sequencia selecionada:",
-    orderLines,
-    "",
-    "Arquivos baixados para anexar:",
-    `- ${excelName}`,
-    `- ${screenshotName}`,
-    "",
-    "Observacao: em um site hospedado no GitHub Pages, os anexos nao podem ser inseridos automaticamente no e-mail. Por isso, os arquivos foram baixados no seu computador para voce anexar antes de enviar."
+    orderLines
   ].join("\n");
 
   return {
