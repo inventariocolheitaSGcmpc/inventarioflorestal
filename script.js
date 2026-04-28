@@ -459,22 +459,9 @@ async function createMapScreenshotAttachment(farmName) {
     await wait(1200);
     exportMap.invalidateSize();
     await wait(400);
-
-    const canvas = await html2canvas(exportStage, {
-      useCORS: true,
-      backgroundColor: "#eef2e7",
-      scale: 1
-    });
-
-    const blob = await new Promise((resolve) => {
-      canvas.toBlob((blob) => {
-        if (!blob) {
-          resolve(null);
-          return;
-        }
-        resolve(blob);
-      }, "image/png");
-    });
+    const mapCanvas = await renderLeafletMapToCanvas(exportMap);
+    const canvas = composeExportCanvas(mapCanvas, farmName);
+    const blob = await canvasToBlob(canvas);
 
     exportMap.remove();
     document.getElementById("exportMap").innerHTML = "";
@@ -497,6 +484,12 @@ function safeFarmName(farmName) {
 
 function wait(ms) {
   return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
+
+function canvasToBlob(canvas) {
+  return new Promise((resolve) => {
+    canvas.toBlob((blob) => resolve(blob || null), "image/png");
+  });
 }
 
 function downloadBlob(blob, filename) {
@@ -695,6 +688,73 @@ async function buildExportMap(selectedFeatures) {
   await wait(500);
 
   return exportMap;
+}
+
+function renderLeafletMapToCanvas(targetMap) {
+  return new Promise((resolve, reject) => {
+    if (typeof leafletImage !== "function") {
+      reject(new Error("leafletImage nao esta disponivel."));
+      return;
+    }
+    leafletImage(targetMap, (error, canvas) => {
+      if (error) {
+        reject(error);
+        return;
+      }
+      resolve(canvas);
+    });
+  });
+}
+
+function composeExportCanvas(mapCanvas, farmName) {
+  const width = 1280;
+  const height = 920;
+  const headerHeight = 160;
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+
+  const ctx = canvas.getContext("2d");
+  ctx.fillStyle = "#eef2e7";
+  ctx.fillRect(0, 0, width, height);
+
+  roundRect(ctx, 24, 24, width - 48, height - 48, 28);
+  ctx.fillStyle = "rgba(255,255,255,0.98)";
+  ctx.fill();
+  ctx.strokeStyle = "rgba(22,33,23,0.12)";
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  ctx.fillStyle = "#2f6b3b";
+  ctx.font = "800 16px Manrope, sans-serif";
+  ctx.fillText("SEQUENCIA DE COLHEITA", 56, 74);
+
+  ctx.fillStyle = "#162117";
+  ctx.font = "800 42px Manrope, sans-serif";
+  ctx.fillText(`Inventario Florestal - ${farmName}`, 56, 122);
+
+  const logo = document.querySelector(".export-logo");
+  if (logo && logo.complete) {
+    ctx.drawImage(logo, width - 210, 48, 130, 72);
+  }
+
+  ctx.drawImage(mapCanvas, 40, headerHeight + 24, width - 80, 640);
+
+  return canvas;
+}
+
+function roundRect(ctx, x, y, width, height, radius) {
+  ctx.beginPath();
+  ctx.moveTo(x + radius, y);
+  ctx.lineTo(x + width - radius, y);
+  ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+  ctx.lineTo(x + width, y + height - radius);
+  ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+  ctx.lineTo(x + radius, y + height);
+  ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+  ctx.lineTo(x, y + radius);
+  ctx.quadraticCurveTo(x, y, x + radius, y);
+  ctx.closePath();
 }
 
 function addExportLegend(targetMap, minValue, maxValue) {
